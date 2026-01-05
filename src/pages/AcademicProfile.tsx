@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 const AcademicProfile = () => {
   const navigate = useNavigate();
@@ -16,7 +18,7 @@ const AcademicProfile = () => {
   const [subjects, setSubjects] = useState("");
   const [learningStyle, setLearningStyle] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!major || !subjects || !learningStyle) {
@@ -24,10 +26,29 @@ const AcademicProfile = () => {
       return;
     }
     
-    // In a real implementation, this would save to Firebase
-    console.log("Profile saved:", { major, subjects, learningStyle });
-    toast.success("Profile saved successfully!");
-    navigate("/smart-matching");
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        toast.error("You must be logged in to save your profile");
+        return;
+      }
+      
+      // Save profile to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        major,
+        subjects: subjects.split('\n').filter(subject => subject.trim() !== ''),
+        learningStyle,
+        updatedAt: new Date()
+      });
+      
+      console.log("Profile saved:", { major, subjects, learningStyle });
+      toast.success("Profile saved successfully!");
+      navigate("/smart-matching");
+    } catch (error: any) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to save profile: " + error.message);
+    }
   };
 
   return (

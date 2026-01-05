@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
-// Mock data for active pods
+// Mock data for active pods (will be replaced with real data from Firestore)
 const mockPods = [
   {
     id: "1",
@@ -45,12 +47,67 @@ const mockPods = [
 
 const SmartMatching = () => {
   const navigate = useNavigate();
-  const [pods] = useState(mockPods);
+  const [pods, setPods] = useState(mockPods);
+  const [loading, setLoading] = useState(true);
 
-  const handleJoinPod = (podId: string) => {
-    toast.success("Joined study pod successfully!");
-    console.log("Joined pod:", podId);
-    // In a real implementation, this would update Firebase
+  useEffect(() => {
+    const fetchPods = async () => {
+      try {
+        // In a real implementation, this would fetch from Firestore
+        // Example of how you would query pods:
+        /*
+        const q = query(collection(db, "pods"));
+        const querySnapshot = await getDocs(q);
+        const fetchedPods = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setPods(fetchedPods);
+        */
+        
+        // For now, we'll use mock data
+        setPods(mockPods);
+      } catch (error) {
+        console.error("Error fetching pods:", error);
+        toast.error("Failed to load study pods");
+        // Still show mock data as fallback
+        setPods(mockPods);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPods();
+  }, []);
+
+  const handleJoinPod = async (podId: string) => {
+    try {
+      // In a real implementation, this would update Firestore
+      // Example:
+      /*
+      const user = auth.currentUser;
+      if (!user) {
+        toast.error("You must be logged in to join a pod");
+        return;
+      }
+      
+      const podRef = doc(db, "pods", podId);
+      await updateDoc(podRef, {
+        members: arrayUnion({
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL
+        })
+      });
+      */
+      
+      toast.success("Joined study pod successfully!");
+      console.log("Joined pod:", podId);
+    } catch (error: any) {
+      console.error("Error joining pod:", error);
+      toast.error("Failed to join pod: " + error.message);
+    }
   };
 
   return (
@@ -66,44 +123,50 @@ const SmartMatching = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pods.map((pod) => (
-            <Card key={pod.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex justify-between items-start">
-                  <span>{pod.subject}</span>
-                  <Badge variant="secondary">{pod.members.length}/5 members</Badge>
-                </CardTitle>
-                <CardDescription>
-                  Learning styles: {pod.learningStyles.join(", ")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex -space-x-2">
-                    {pod.members.map((member) => (
-                      <Avatar key={member.id} className="border-2 border-white">
-                        <AvatarImage src={member.avatar} />
-                        <AvatarFallback>
-                          {member.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pods.map((pod) => (
+              <Card key={pod.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-start">
+                    <span>{pod.subject}</span>
+                    <Badge variant="secondary">{pod.members.length}/5 members</Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Learning styles: {pod.learningStyles.join(", ")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex -space-x-2">
+                      {pod.members.map((member) => (
+                        <Avatar key={member.id} className="border-2 border-white">
+                          <AvatarImage src={member.avatar} />
+                          <AvatarFallback>
+                            {member.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <Button 
-                  onClick={() => handleJoinPod(pod.id)}
-                  className="w-full"
-                >
-                  Join Pod
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <Button 
+                    onClick={() => handleJoinPod(pod.id)}
+                    className="w-full"
+                  >
+                    Join Pod
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <div className="mt-12 text-center">
           <Card className="max-w-2xl mx-auto">

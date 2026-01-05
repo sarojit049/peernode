@@ -4,15 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup } from "firebase/auth";
+import { toast } from "sonner";
 
 const Onboarding = () => {
   const navigate = useNavigate();
 
-  const handleGoogleSignIn = () => {
-    // In a real implementation, this would integrate with Firebase Auth
-    // For now, we'll simulate a successful login
-    console.log("Signing in with Google");
-    navigate("/academic-profile");
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      console.log("User signed in:", user);
+      toast.success("Signed in successfully!");
+      navigate("/academic-profile");
+    } catch (error: any) {
+      console.error("Error signing in:", error);
+      toast.error("Failed to sign in: " + error.message);
+    }
   };
 
   return (

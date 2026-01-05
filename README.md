@@ -7,7 +7,7 @@ A student collaboration platform designed for the GDGOC MCKVIE TechSprint.
 - **Onboarding**: Clean login screen with Google Sign In
 - **Academic Profile**: Form for students to enter their major, subjects, and learning style
 - **Smart Matching**: Dashboard showing active study pods based on academic profiles
-- **AI Search**: Upload syllabus PDFs and use Gemini AI to find matching study partners
+- **AI Search**: Upload syllabus PDFs and use AI to find matching study partners
 
 ## Tech Stack
 
@@ -23,13 +23,42 @@ A student collaboration platform designed for the GDGOC MCKVIE TechSprint.
 2. Install dependencies: `npm install`
 3. Start the development server: `npm run dev`
 
+## Setup Instructions
+
+### Firebase Configuration
+
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Register your web app in Firebase
+3. Copy your Firebase configuration values
+4. Create a `.env` file in the root directory
+5. Add your Firebase configuration to the `.env` file:
+
+```
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+### Gemini API Configuration
+
+1. Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/)
+2. Add your API key to the `.env` file:
+
+```
+VITE_GEMINI_API_KEY=your_gemini_api_key
+```
+
 ## Project Structure
 
 ```
 src/
 ├── components/     # Reusable UI components
 ├── pages/         # Page components for each route
-├── lib/           # Utility functions
+├── lib/           # Utility functions and Firebase configuration
 ├── hooks/         # Custom React hooks
 └── App.tsx        # Main application component with routing
 ```

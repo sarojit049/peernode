@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { FileText, Upload } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { analyzeSyllabus, findMatchingPods } from "@/lib/gemini";
 
 const AiSearch = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ const AiSearch = () => {
     setSyllabusText("Sample syllabus content extracted from PDF...");
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!syllabusText.trim()) {
       toast.error("Please enter syllabus content or upload a file");
       return;
@@ -35,36 +36,26 @@ const AiSearch = () => {
 
     setIsAnalyzing(true);
     
-    // Simulate AI processing
-    setTimeout(() => {
-      setIsAnalyzing(false);
+    try {
+      // Analyze syllabus with Gemini API
+      const analysis = await analyzeSyllabus(syllabusText);
+      
+      // Find matching pods
+      const matchingPods = await findMatchingPods(analysis);
+      
       setResults({
-        subject: "Advanced Web Development",
-        topics: [
-          "React Hooks and Context API",
-          "State Management with Redux",
-          "Backend Integration with Node.js",
-          "Database Design with MongoDB",
-          "Authentication and Security",
-          "Performance Optimization"
-        ],
-        matchingPods: [
-          {
-            id: "1",
-            subject: "Web Development Fundamentals",
-            members: 3,
-            matchScore: 92
-          },
-          {
-            id: "2",
-            subject: "Frontend Frameworks",
-            members: 4,
-            matchScore: 87
-          }
-        ]
+        subject: analysis.subject,
+        topics: analysis.topics,
+        matchingPods
       });
+      
       toast.success("Syllabus analyzed successfully!");
-    }, 2000);
+    } catch (error: any) {
+      console.error("Error analyzing syllabus:", error);
+      toast.error("Failed to analyze syllabus: " + error.message);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -138,7 +129,7 @@ const AiSearch = () => {
                     Analyzing with AI...
                   </>
                 ) : (
-                  "Analyze with Gemini AI"
+                  "Analyze with AI"
                 )}
               </Button>
             </CardContent>
@@ -189,6 +180,7 @@ const AiSearch = () => {
                             <div>
                               <h4 className="font-medium">{pod.subject}</h4>
                               <p className="text-sm text-gray-600">{pod.members} members</p>
+                              <p className="text-sm text-gray-500 mt-1">{pod.description}</p>
                             </div>
                             <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
                               {pod.matchScore}% match
